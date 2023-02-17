@@ -8,7 +8,7 @@
 #
 Get-NetAdapter
 New-VMSwitch -Name "External Switch" -NetAdapterName "Ethernet"
-minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "${HOME}:/host"
+minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "${HOME}:/mnt/host"
 # test
 minikube ssh
 
@@ -34,3 +34,12 @@ Get-DnsClientNrptRule | Where-Object {$_.Namespace -eq '.minikube'} | Remove-Dns
 Add-DnsClientNrptRule -Namespace ".minikube" -NameServers "$(minikube ip)"
 # test
 Start-Process "http://dashboard.minikube"
+
+#
+# enable jenkins
+#
+kubectl apply -f $HOME\projects\minikube-jenkins-blue-ocean\manifests\devops
+
+# get the initial admin pwd on clipboard, to paste on first access of jenkins
+$pod =  (kubectl get pods -n devops | Select-String -Pattern "jenkins-[a-z0-9-]*" -AllMatches).Matches.Value
+kubectl exec $pod --namespace=devops -- cat /var/jenkins_home/secrets/initialAdminPassword | Set-Clipboard
