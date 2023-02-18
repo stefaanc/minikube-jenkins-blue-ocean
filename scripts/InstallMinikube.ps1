@@ -7,10 +7,11 @@
 # start minikube
 #
 Get-NetAdapter
-New-VMSwitch -Name "External Switch" -NetAdapterName "Ethernet"
-minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "${HOME}:/mnt/host"
+New-VMSwitch -Name "Minikube Switch" -NetAdapterName "Ethernet"
+minikube start --vm-driver hyperv --hyperv-virtual-switch "Minikube Switch" --mount --mount-string "${HOME}:/mnt/host"
 # test
 minikube ssh
+ls -la /mnt/host
 
 #
 # enable dashboard
@@ -24,7 +25,10 @@ minikube dashboard
 # enable ingress
 #
 minikube addons enable ingress
-kubectl apply -f $HOME\projects\minikube-jenkins-blue-ocean\manifests\kubernetes-dashboard
+
+# TODO: after checking it works OK, delete jobs (& pods) with labels:
+# - app.kubernetes.io/component: admission-webhook
+#   app.kubernetes.io/name: ingress-nginx
 
 #
 # enable ingress-dns
@@ -33,13 +37,7 @@ minikube addons enable ingress-dns
 Get-DnsClientNrptRule | Where-Object {$_.Namespace -eq '.minikube'} | Remove-DnsClientNrptRule -Force
 Add-DnsClientNrptRule -Namespace ".minikube" -NameServers "$(minikube ip)"
 # test
+kubectl apply -f $HOME\projects\minikube-jenkins-blue-ocean\manifests\kubernetes-dashboard
 Start-Process "http://dashboard.minikube"
 
-#
-# enable jenkins
-#
-kubectl apply -f $HOME\projects\minikube-jenkins-blue-ocean\manifests\devops
-
-# get the initial admin pwd on clipboard, to paste on first access of jenkins
-$pod =  (kubectl get pods -n devops | Select-String -Pattern "jenkins-[a-z0-9-]*" -AllMatches).Matches.Value
-kubectl exec $pod --namespace=devops -- cat /var/jenkins_home/secrets/initialAdminPassword | Set-Clipboard
+# TODO: add tls to ingress

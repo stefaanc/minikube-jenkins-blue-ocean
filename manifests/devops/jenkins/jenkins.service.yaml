@@ -16,6 +16,6 @@ spec:
     - name: http
       port: 80
       targetPort: http
-    - name: agent
+    - name: jnlp
       port: 50000
-      targetPort: agent
+      targetPort: jnlp

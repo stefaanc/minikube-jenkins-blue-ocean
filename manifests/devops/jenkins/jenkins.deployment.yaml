@@ -30,23 +30,31 @@ spec:
             - name: http
               protocol: TCP
               containerPort: 8080
-            - name: agent
+            - name: jnlp
               protocol: TCP
               containerPort: 50000
-          volumeMounts:
-            - name: jenkins
-              mountPath: /tmp/jenkins
           livenessProbe:
             httpGet:
               path: /login
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /login
               port: 8080
             initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: jenkins
+              mountPath: /
       volumes:
         - name: jenkins
-          emptyDir: {}
+          hostPath: 
+            path: /mnt/host/jenkins
+            type: DirectoryOrCreate
             
