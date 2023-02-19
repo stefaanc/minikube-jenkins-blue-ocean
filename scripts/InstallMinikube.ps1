@@ -1,6 +1,6 @@
 #
-# the following will most probably not properly run as a script - it needs to wait for completion after some steps
-# I copy & execute the following line-by-line into a powershell teminal and verify each step manually
+# the following will most probably not properly run as a script - it needs to wait for completion after some of the steps
+# I copy & execute the following line-by-line into a powershell terminal and verify each step manually
 #
 
 #
@@ -12,6 +12,9 @@ minikube start --vm-driver hyperv --hyperv-virtual-switch "Minikube Switch" --mo
 # test
 minikube ssh
 ls -la /mnt/host
+
+  # TODO: 
+  # - have multiple nodes
 
 #
 # enable dashboard
@@ -26,9 +29,10 @@ minikube dashboard
 #
 minikube addons enable ingress
 
-# TODO: after checking it works OK, delete jobs (& pods) with labels:
-# - app.kubernetes.io/component: admission-webhook
-#   app.kubernetes.io/name: ingress-nginx
+  # TODO: 
+  # - after checking it works OK, delete jobs (& pods) with labels:
+  #   - app.kubernetes.io/component: admission-webhook
+  #     app.kubernetes.io/name: ingress-nginx
 
 #
 # enable ingress-dns
@@ -40,4 +44,5 @@ Add-DnsClientNrptRule -Namespace ".minikube" -NameServers "$(minikube ip)"
 kubectl apply -f $HOME\projects\minikube-jenkins-blue-ocean\manifests\kubernetes-dashboard
 Start-Process "http://dashboard.minikube"
 
-# TODO: add tls to ingress
+  # TODO: 
+  # - add tls to ingress
