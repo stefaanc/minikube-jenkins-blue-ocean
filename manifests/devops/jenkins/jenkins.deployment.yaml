@@ -65,3 +65,24 @@ spec:
           persistentVolumeClaim:
             claimName: jenkins-home
             
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+  namespace: devops
+  labels:
+    app.kubernetes.io/name: jenkins
+    app.kubernetes.io/part-of: jenkins
+    app.kubernetes.io/component: devops
+spec:
+  selector:
+    app.kubernetes.io/name: jenkins
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: jnlp
+      port: 50000
+      targetPort: jnlp
