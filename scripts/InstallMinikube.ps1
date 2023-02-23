@@ -14,6 +14,11 @@ Get-NetAdapter -Name $NetAdapter
 #
 # create a new virtual switch
 #
+# note on switch type:
+# - instead of an external switch, you can use an internal switch with internet connection sharing or with a NAT network
+#   problem is that this seems to lead to an "Unidentifed" network with a "Public" network profile
+#   there are ways to get this to work but there seems to be no way to make this reliably persist after a restart
+#
 New-VMSwitch -Name "External Switch" -NetAdapterName $NetAdapter
 
   ## TODO:
@@ -26,15 +31,20 @@ New-VMSwitch -Name "External Switch" -NetAdapterName $NetAdapter
 #
 # start minikube
 #
-# note on shared folders:
+# note on mounting filesystems:
+# - after restarting your computer, you loose your mounted filesystems
+#   run "minikube start" to re-mount any previously mounted filesystems 
+#
+# note on shared folders on windows host:
 # - add read/write permission for Everyone on the shared folder
-# - turn on File and Printer Sharing for private networks
-# - turn off Password Protected Sharing for all networks
+# - set the Network profile to private for the network adapter
+# - turn on Network discovery and turn on File and printer sharing for private networks
+# - turn on Public folder sharing and turn off Password Protected Sharing for all networks
 #
 # note on ssh:
 # - to be able to use the command history, use
-#   - ssh: "ssh -i "~\.ssh\minikube\id_rsa docker@$( minikube ip )"
-#   - putty: host "minikube", user "docker", password "tcuser" or private key converted from "~\.ssh\minikube\id_rsa" to .ppk format using puttygen
+#   - ssh: "ssh -i "~\.ssh\minikube\id_rsa docker@minikube.local"
+#   - putty: host "minikube.local", user "docker", password "tcuser" or private key file for authentication converted from "~\.ssh\minikube\id_rsa" to .ppk format using puttygen
 #
 minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "\\$( hostname )\USERS\Stefaan\MinikubeData:/mnt/hostdata"
 if ( !( Test-Path -path "~\.ssh\minikube" ) ) { New-Item "~\.ssh\minikube" -Type Directory }
@@ -46,6 +56,7 @@ ls -la /mnt/hostdata
   ## TODO: 
   ## - have multiple nodes
   ## - load new kubectl when it's version is different from kubernetes
+  ## - check/set settings for shared folders
 
 #
 # enable dashboard
