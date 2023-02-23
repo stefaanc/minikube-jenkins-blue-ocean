@@ -7,19 +7,21 @@ Set-ExecutionPolicy -ExecutionPolicy ByPass -Scope Process
 $NetAdapter = "Ethernet 2"
 Get-NetAdapter -Name $NetAdapter
 
-  # TODO:
-  # - check NetAdapter is Up and has access to internet
+  ## TODO:
+  ## - check that the netadapter exists, is Up and connected to the internet
+  ## - make sure you only use wired adapters when planning to mount shared folders
 
 #
 # create a new virtual switch
 #
-New-VMSwitch -Name "Minikube Switch" -SwitchType Internal
-if ($Null -eq (Get-InstalledModule -Name PSInternetConnectionSharing -ErrorAction Ignore)) {
-  Install-Module -Name PSInternetConnectionSharing -Scope CurrentUser -Force
-}
-Disable-Ics
-Set-Ics -PublicConnectionName $NetAdapter -PrivateConnectionName "vEthernet (Minikube Switch)"
-Set-NetConnectionProfile -InterfaceAlias "vEthernet (Minikube Switch)" -NetworkCategory Private
+New-VMSwitch -Name "External Switch" -NetAdapterName $NetAdapter
+
+  ## TODO:
+  ## - check that the switch doesn't exist already
+  ##   - don't delete it if it does, because other VMs may be connected to it
+  ##   - instead, check if netadapter is the one we need
+  ##   - don't delete it if it isn't
+  ##   - instead, needs manual check, so exit script here
 
 #
 # start minikube
@@ -34,17 +36,16 @@ Set-NetConnectionProfile -InterfaceAlias "vEthernet (Minikube Switch)" -NetworkC
 #   - ssh: "ssh -i "~\.ssh\minikube\id_rsa docker@$( minikube ip )"
 #   - putty: host "minikube", user "docker", password "tcuser" or private key converted from "~\.ssh\minikube\id_rsa" to .ppk format using puttygen
 #
-minikube start --vm-driver hyperv --hyperv-virtual-switch "Minikube Switch" --mount --mount-string "\\$( hostname )\USERS\Stefaan\MinikubeData:/mnt/hostdata"
+minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "\\$( hostname )\USERS\Stefaan\MinikubeData:/mnt/hostdata"
 if ( !( Test-Path -path "~\.ssh\minikube" ) ) { New-Item "~\.ssh\minikube" -Type Directory }
 Get-ChildItem -Path "~\.minikube\machines\minikube" -Filter "id_rsa*" | Copy-Item -Destination "~\.ssh\minikube"
 # test
 minikube ssh
 ls -la /mnt/hostdata
 
-  # TODO: 
-  # - have multiple nodes
-  # - load new kubectl when it's version is different from kubernetes
-  # - Disable-Ics doesn't disble it when virtual switch was deleted
+  ## TODO: 
+  ## - have multiple nodes
+  ## - load new kubectl when it's version is different from kubernetes
 
 #
 # enable dashboard
@@ -59,10 +60,10 @@ minikube dashboard
 #
 minikube addons enable ingress
 
-  # TODO: 
-  # - after checking it works OK, delete jobs (& pods) with labels:
-  #   - app.kubernetes.io/component: admission-webhook
-  #     app.kubernetes.io/name: ingress-nginx
+  ## TODO: 
+  ## - after checking it works OK, delete jobs (& pods) with labels:
+  ##   - app.kubernetes.io/component: admission-webhook
+  ##     app.kubernetes.io/name: ingress-nginx
 
 #
 # enable ingress-dns
@@ -74,5 +75,5 @@ Add-DnsClientNrptRule -Namespace ".minikube" -NameServers "$(minikube ip)"
 kubectl apply -f $HOME\projects\minikube-jenkins-blue-ocean\manifests\kubernetes-dashboard
 Start-Process "http://dashboard.minikube"
 
-  # TODO: 
-  # - add tls to ingress
+  ## TODO: 
+  ## - add tls to ingress
