@@ -1,7 +1,9 @@
+#####
 #
-# the following will most probably not properly run as a script - it needs to wait for completion after some of the steps
-# I copy & execute the following line-by-line into a powershell terminal and verify each step manually
+#   the following will not properly run as a script - it needs to wait for completion after some of the steps
+#   I copy & execute the following line-by-line into a powershell terminal and verify each step manually
 #
+#####
 Set-ExecutionPolicy -ExecutionPolicy ByPass -Scope Process
 
 $NetAdapter = "Ethernet 2"
@@ -33,7 +35,7 @@ New-VMSwitch -Name "External Switch" -NetAdapterName $NetAdapter
 #
 # note on mounting filesystems:
 # - after restarting your computer, you loose your mounted filesystems
-#   run "minikube start" to re-mount any previously mounted filesystems 
+#   - for shared folders: run "minikube start" to re-mount any previously mounted filesystems 
 #
 # note on shared folders on windows host:
 # - add read/write permission for Everyone on the shared folder
@@ -46,7 +48,8 @@ New-VMSwitch -Name "External Switch" -NetAdapterName $NetAdapter
 #   - ssh: "ssh -i "~\.ssh\minikube\id_rsa docker@minikube.local"
 #   - putty: host "minikube.local", user "docker", password "tcuser" or private key file for authentication converted from "~\.ssh\minikube\id_rsa" to .ppk format using puttygen
 #
-minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "\\$( hostname )\USERS\Stefaan\MinikubeData:/mnt/hostdata"
+minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "\\$( hostname )\USERS\Stefaan\MinikubeData:/mnt/smbdata"
+minikube ssh "sudo mkdir -p /mnt/nfsdata && sudo mount -t nfs -o nfsvers=3,proto=udp $( hostname ):/nfsdata /mnt/nfsdata"
 if ( !( Test-Path -path "~\.ssh\minikube" ) ) { New-Item "~\.ssh\minikube" -Type Directory }
 Get-ChildItem -Path "~\.minikube\machines\minikube" -Filter "id_rsa*" | Copy-Item -Destination "~\.ssh\minikube"
 # test

@@ -1,8 +1,9 @@
+#####
 #
-# the following will most probably not properly run as a script - it needs to wait for completion after some steps
-# I copy & execute the following line-by-line into a powershell teminal and verify each step manually
+#   the following will not properly run as a script - it needs to wait for completion after some of the steps
+#   I copy & execute the following line-by-line into a powershell terminal and verify each step manually
 #
-
+#####
 #
 # enable jenkins
 #

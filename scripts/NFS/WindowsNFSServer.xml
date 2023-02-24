@@ -1,0 +1,14 @@
+<!--                                                                                            -->
+<!-- see https://github.com/winsw/winsw : Windows Service Wrapper in a permissive license       -->
+<!--                                                                                            -->
+<service>
+  <id>WindowsNFSServer</id>
+  <name>Windows NFS Server</name>
+  <description>Runs an NFS server for non-server Windows.</description>
+  <workingdirectory>C:\NFS</workingdirectory>
+  <executable>Powershell.exe</executable>
+  <arguments>-ExecutionPolicy Bypass -NonInteractive -File .\WinNFSd.ps1</arguments>
+  <log mode="roll"></log>
+  <onfailure action="restart" />
+  <autoRefresh>true</autoRefresh>
+</service>
