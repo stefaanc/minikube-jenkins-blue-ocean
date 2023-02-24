@@ -71,16 +71,18 @@ minikube ssh "ls -la /mnt/9pdata"
   ## TODO: 
   ## - check/set settings for shared folders
 
-#
-# mount nfs share
-#
-@"
-sudo mkdir -p /mnt/nfsdata
-sudo mount -t nfs -o nfsvers=3,udp $( hostname ):/nfsdata /mnt/nfsdata
-exit 0
-"@ | minikube ssh "bash -"
-# test
-minikube ssh "ls -la /mnt/nfsdata"
+##
+## mount nfs share
+##
+## issue: tcp hangs after a while, udp is not supported on minikube
+##
+#@"
+#sudo mkdir -p /mnt/nfsdata
+#sudo mount -t nfs -o nfsvers=3,udp $( hostname ):/nfsdata /mnt/nfsdata
+#exit 0
+#"@ | minikube ssh "bash -"
+## test
+#minikube ssh "ls -la /mnt/nfsdata"
 
 #
 # enable dashboard
