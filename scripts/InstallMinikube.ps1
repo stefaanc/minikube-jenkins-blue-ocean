@@ -23,6 +23,9 @@ Get-NetAdapter -Name $NetAdapter
 #
 New-VMSwitch -Name "External Switch" -NetAdapterName $NetAdapter
 
+$HostName = hostname
+$HostIP = (Get-NetIPAddress -InterfaceAlias "vEthernet (External Switch)" -AddressFamily IPv4).IPAddress
+
   ## TODO:
   ## - check that the switch doesn't exist already
   ##   - don't delete it if it does, because other VMs may be connected to it
@@ -33,9 +36,23 @@ New-VMSwitch -Name "External Switch" -NetAdapterName $NetAdapter
 #
 # start minikube
 #
-# note on mounting filesystems:
-# - after restarting your computer, you loose your mounted filesystems
-#   - for shared folders: run "minikube start" to re-mount any previously mounted filesystems 
+# note on ssh:
+# - to be able to use the command history, use
+#   - ssh: ssh -i "$HOME\.ssh\minikube\id_rsa docker@minikube.local"
+#   - putty: host "minikube.local", user "docker", password "tcuser" or private key file for authentication converted from "$HOME\.ssh\minikube\id_rsa" to .ppk format using puttygen
+#
+#minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "\\$HostName\USERS\Stefaan\MinikubeData:/mnt/9pdata"
+minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch"
+if ( !( Test-Path -path "$HOME\.ssh\minikube" ) ) { New-Item "$HOME\.ssh\minikube" -Type Directory }
+Get-ChildItem -Path "$HOME\.minikube\machines\minikube" -Filter "id_rsa*" | Copy-Item -Destination "$HOME\.ssh\minikube"
+puttygen "$HOME\.ssh\minikube\id_rsa" # manually save the private key and close the app
+
+  ## TODO: 
+  ## - have multiple nodes
+  ## - load new kubectl when it's version is different from kubernetes
+
+#
+# mount 9p share
 #
 # note on shared folders on windows host:
 # - add read/write permission for Everyone on the shared folder
@@ -43,23 +60,27 @@ New-VMSwitch -Name "External Switch" -NetAdapterName $NetAdapter
 # - turn on Network discovery and turn on File and printer sharing for private networks
 # - turn on Public folder sharing and turn off Password Protected Sharing for all networks
 #
-# note on ssh:
-# - to be able to use the command history, use
-#   - ssh: "ssh -i "~\.ssh\minikube\id_rsa docker@minikube.local"
-#   - putty: host "minikube.local", user "docker", password "tcuser" or private key file for authentication converted from "~\.ssh\minikube\id_rsa" to .ppk format using puttygen
-#
-minikube start --vm-driver hyperv --hyperv-virtual-switch "External Switch" --mount --mount-string "\\$( hostname )\USERS\Stefaan\MinikubeData:/mnt/smbdata"
-minikube ssh "sudo mkdir -p /mnt/nfsdata && sudo mount -t nfs -o nfsvers=3,proto=udp $( hostname ):/nfsdata /mnt/nfsdata"
-if ( !( Test-Path -path "~\.ssh\minikube" ) ) { New-Item "~\.ssh\minikube" -Type Directory }
-Get-ChildItem -Path "~\.minikube\machines\minikube" -Filter "id_rsa*" | Copy-Item -Destination "~\.ssh\minikube"
+@"
+sudo mkdir -p /mnt/9pdata
+sudo mount -t 9p -o dfltuid=1000,dfltgid=1000,access=any,msize=65536,trans=tcp,port=50806 $HostIP /mnt/9pdata
+exit 0
+"@ | minikube ssh "bash -"
 # test
-minikube ssh
-ls -la /mnt/hostdata
+minikube ssh "ls -la /mnt/9pdata"
 
   ## TODO: 
-  ## - have multiple nodes
-  ## - load new kubectl when it's version is different from kubernetes
   ## - check/set settings for shared folders
+
+#
+# mount nfs share
+#
+@"
+sudo mkdir -p /mnt/nfsdata
+sudo mount -t nfs -o nfsvers=3,udp $( hostname ):/nfsdata /mnt/nfsdata
+exit 0
+"@ | minikube ssh "bash -"
+# test
+minikube ssh "ls -la /mnt/nfsdata"
 
 #
 # enable dashboard
